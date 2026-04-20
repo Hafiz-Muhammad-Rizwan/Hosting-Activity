@@ -32,11 +32,14 @@ function getDBConnection(): mysqli
 
     $flags = 0;
     if (DB_SSL_MODE === 'REQUIRED') {
+        // Disable strict SSL certificate validation
+        mysqli_options($conn, MYSQLI_OPT_SSL_VERIFY_SERVER_CERT, false);
         $conn->ssl_set(null, null, DB_SSL_CA ?: null, null, null);
         $flags = MYSQLI_CLIENT_SSL;
     }
 
-    $conn->real_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT, null, $flags);
+    // Use '@' to suppress HTML warnings so it doesn't break the JSON response
+    @$conn->real_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME, DB_PORT, null, $flags);
 
     if ($conn->connect_error) {
         http_response_code(500);
