@@ -694,6 +694,9 @@
         const data = await response.json();
 
         if (data.success) {
+          /* Store login state in localStorage (Vercel has no persistent PHP sessions) */
+          localStorage.setItem('otf_user', JSON.stringify(data.user || {}));
+          localStorage.setItem('otf_logged_in', 'true');
           showSuccess(data.redirect || 'dashboard.html');
         } else {
           showAlert(data.message || 'Login failed. Please try again.');
@@ -725,13 +728,10 @@
     document.head.appendChild(shakeStyle);
 
     /* ── If already logged in, go straight to dashboard ── */
-    (async () => {
-      try {
-        const r = await fetch('../api/check_auth.php', { credentials: 'same-origin' });
-        const d = await r.json();
-        if (d.loggedIn) window.location.replace('dashboard.html');
-      } catch (_) { /* not logged in – stay on page */ }
-    })();
+    /* Using localStorage because Vercel PHP runtime has no persistent sessions */
+    if (localStorage.getItem('otf_logged_in') === 'true') {
+      window.location.replace('dashboard.html');
+    }
   </script>
 </body>
 </html>

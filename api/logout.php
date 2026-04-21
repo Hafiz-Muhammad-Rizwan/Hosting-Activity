@@ -29,5 +29,5 @@ header('Content-Type: application/json');
 echo json_encode([
     'success'  => true,
     'message'  => 'You have been logged out successfully.',
-    'redirect' => '../pages/login.html'
+    'redirect' => 'login.html'
 ]);
