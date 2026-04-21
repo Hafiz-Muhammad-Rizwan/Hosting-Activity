@@ -683,52 +683,50 @@
        JAVASCRIPT
   ═══════════════════════════════════════════════ -->
   <script>
-    /* ── Auth check – called immediately ── */
-    (async () => {
-      try {
-        const res  = await fetch('../api/check_auth.php', { credentials: 'same-origin' });
-        const data = await res.json();
+    /* ── Auth check via localStorage (Vercel PHP has no persistent sessions) ── */
+    (() => {
+      const isLoggedIn = localStorage.getItem('otf_logged_in') === 'true';
+      const userRaw    = localStorage.getItem('otf_user');
 
-        if (!data.loggedIn) {
-          /* Not authenticated → redirect to login */
-          window.location.replace(data.redirect || '../pages/login.html');
-          return;
-        }
-
-        /* Populate UI with user data */
-        const { username, email, role } = data.user;
-
-        document.getElementById('heroName').textContent    = username.split(' ')[0];
-        document.getElementById('sessionEmail').textContent = email;
-        document.getElementById('sessionRole').textContent  = role;
-
-        /* Avatar initials */
-        const initials = username.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-        document.getElementById('avatarEl').textContent = initials;
-
-        /* Role badge */
-        const roleEmoji = { student: '⚽', organization: '🏟️', admin: '🛡️' };
-        document.getElementById('roleBadge').innerHTML =
-          `${roleEmoji[role] || '🏅'} ${role.charAt(0).toUpperCase() + role.slice(1)}`;
-
-        /* Hide auth gate, show page */
-        const gate = document.getElementById('authGate');
-        gate.classList.add('hidden');
-        document.body.classList.add('ready');
-        setTimeout(() => gate.remove(), 450);
-
-        /* Animate progress bars */
-        requestAnimationFrame(() => {
-          document.querySelectorAll('.progress-bar-fill').forEach(bar => {
-            bar.style.width = bar.dataset.width + '%';
-          });
-        });
-
-      } catch (err) {
-        /* Network/server error – redirect to login */
-        console.error('Auth check failed:', err);
-        window.location.replace('../pages/login.html');
+      if (!isLoggedIn || !userRaw) {
+        /* Not authenticated → redirect to login */
+        window.location.replace('login.html');
+        return;
       }
+
+      let user = {};
+      try { user = JSON.parse(userRaw); } catch (_) {}
+
+      const username = user.username || 'Athlete';
+      const email    = user.email    || '—';
+      const role     = user.role     || 'student';
+
+      /* Populate UI with user data */
+      document.getElementById('heroName').textContent     = username.split(' ')[0];
+      document.getElementById('sessionEmail').textContent = email;
+      document.getElementById('sessionRole').textContent  = role;
+
+      /* Avatar initials */
+      const initials = username.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      document.getElementById('avatarEl').textContent = initials;
+
+      /* Role badge */
+      const roleEmoji = { student: '⚽', organization: '🏟️', admin: '🛡️' };
+      document.getElementById('roleBadge').innerHTML =
+        `${roleEmoji[role] || '🏅'} ${role.charAt(0).toUpperCase() + role.slice(1)}`;
+
+      /* Hide auth gate, show page */
+      const gate = document.getElementById('authGate');
+      gate.classList.add('hidden');
+      document.body.classList.add('ready');
+      setTimeout(() => gate.remove(), 450);
+
+      /* Animate progress bars */
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.progress-bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+      });
     })();
 
     /* ── Logout button ── */
@@ -737,16 +735,16 @@
       btn.disabled = true;
       btn.querySelector('span').textContent = 'Signing out…';
 
+      /* Clear localStorage auth state */
+      localStorage.removeItem('otf_logged_in');
+      localStorage.removeItem('otf_user');
+
       try {
-        const res  = await fetch('../api/logout.php', {
-          method:      'POST',
-          credentials: 'same-origin',
-        });
-        const data = await res.json();
-        window.location.replace(data.redirect || '../pages/login.html');
-      } catch (_) {
-        window.location.replace('../pages/login.html');
-      }
+        /* Also call logout.php to destroy PHP session (best effort) */
+        await fetch('../api/logout.php', { method: 'POST', credentials: 'same-origin' });
+      } catch (_) { /* ignore */ }
+
+      window.location.replace('login.html');
     });
   </script>
 
