@@ -694,7 +694,7 @@
         const data = await response.json();
 
         if (data.success) {
-          showSuccess(data.redirect || '../pages/dashboard.html');
+          showSuccess(data.redirect || 'dashboard.html');
         } else {
           showAlert(data.message || 'Login failed. Please try again.');
           /* Shake password field for visual feedback */
@@ -729,7 +729,7 @@
       try {
         const r = await fetch('../api/check_auth.php', { credentials: 'same-origin' });
         const d = await r.json();
-        if (d.loggedIn) window.location.replace('../pages/dashboard.html');
+        if (d.loggedIn) window.location.replace('dashboard.html');
       } catch (_) { /* not logged in – stay on page */ }
     })();
   </script>

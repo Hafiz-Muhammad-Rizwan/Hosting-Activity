@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // ── Already logged in? ───────────────────────────────────────
 if (isset($_SESSION['user_id'])) {
-    echo json_encode(['success' => true, 'message' => 'Already logged in.', 'redirect' => '../pages/dashboard.html']);
+    echo json_encode(['success' => true, 'message' => 'Already logged in.', 'redirect' => 'dashboard.html']);
     exit;
 }
 
@@ -88,5 +88,5 @@ echo json_encode([
         'username' => $user['username'],
         'role'     => $user['role'],
     ],
-    'redirect' => '../pages/dashboard.html'
+    'redirect' => 'dashboard.html'
 ]);
